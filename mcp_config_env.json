@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "document-converter": {
+      "command": "python",
+      "args": ["mcp_server.py"],
+      "cwd": "D:/maoProject/xiaoyang/xiaoyangweb",
+      "env": {
+        "PATH": "D:/maoProject/xiaoyang/xiaoyangweb/.venv/Scripts;%PATH%",
+        "PYTHONPATH": "D:/maoProject/xiaoyang/xiaoyangweb/.venv/Lib/site-packages"
+      }
+    }
+  }
+} 

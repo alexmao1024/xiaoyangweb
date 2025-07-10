@@ -1,0 +1,7 @@
+flask
+requests
+pypandoc
+mcp
+pandas
+openpyxl
+gunicorn
