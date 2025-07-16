@@ -6,19 +6,19 @@
     <title>小羊的工具箱</title>
     
     <!-- Element Plus CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css" />
     
     <!-- Vue 3 -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
     
     <!-- Element Plus JS -->
-    <script src="https://unpkg.com/element-plus/dist/index.full.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/element-plus/dist/index.full.js"></script>
     
     <!-- Element Plus Icons -->
-    <script src="https://unpkg.com/@element-plus/icons-vue/dist/index.iife.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue/dist/index.iife.js"></script>
     
     <!-- 自定义样式 -->
-    <link rel="stylesheet" href="/static/css/main.css?v=2.1">
+    <link rel="stylesheet" href="/static/css/main.css?v=3.8">
     
     <!-- 样式加载检测 -->
     <style>
@@ -57,8 +57,27 @@
 
         <!-- 主要内容区 -->
         <el-container class="main-container">
+            <!-- 移动端侧边栏切换按钮 -->
+            <el-button 
+                v-show="isMobile"
+                class="sidebar-toggle-mobile"
+                @click="toggleSidebar"
+                circle
+                type="primary"
+                size="large"
+            >
+                <el-icon>
+                    <Plus v-if="sidebarCollapsed" />
+                    <Minus v-else />
+                </el-icon>
+            </el-button>
+            
             <!-- 侧边栏 - 工具导航 -->
-            <el-aside width="280px" class="sidebar">
+            <el-aside 
+                width="280px" 
+                class="sidebar"
+                :class="{ collapsed: isMobile && sidebarCollapsed }"
+            >
                 <el-menu 
                     :default-active="activeMenu"
                     @select="handleMenuSelect"
@@ -71,7 +90,7 @@
                         <el-tag size="small" type="success">已上线</el-tag>
                     </el-menu-item>
                     
-                    <el-divider>📋 计划中的工具</el-divider>
+                    <el-divider>📋 规划中</el-divider>
                     <el-menu-item index="caj-converter" disabled>
                         <el-icon><Reading /></el-icon>
                         <span>CAJ转PDF</span>
@@ -135,8 +154,8 @@
     </div>
 
     <!-- Vue 组件和应用逻辑 -->
-    <script src="/static/js/api.js?v=2.1"></script>
-    <script src="/static/components/DocumentConverter.js?v=2.1"></script>
-    <script src="/static/js/main.js?v=2.1"></script>
+    <script src="/static/js/api.js?v=3.4"></script>
+    <script src="/static/components/DocumentConverter.js?v=3.4"></script>
+    <script src="/static/js/main.js?v=3.4"></script>
 </body>
 </html> 

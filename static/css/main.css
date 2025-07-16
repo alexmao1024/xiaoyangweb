@@ -24,6 +24,7 @@
   --separator-color: #e9ecef;
   
   /* 阴影效果 - 苹果风格但保持粉色调 */
+  --shadow-small: 0 1px 6px 0 rgba(248, 187, 217, 0.08);
   --shadow-light: 0 2px 12px 0 rgba(248, 187, 217, 0.1);
   --shadow-medium: 0 4px 16px 0 rgba(248, 187, 217, 0.15);
   --shadow-large: 0 8px 25px 0 rgba(248, 187, 217, 0.2);
@@ -40,6 +41,20 @@
 
 * {
   box-sizing: border-box;
+}
+
+/* 桌面端确保样式不受影响 */
+@media (min-width: 769px) {
+  .sidebar {
+    transition: none !important;
+    overflow: visible !important;
+    max-height: none !important;
+    opacity: 1 !important;
+  }
+  
+  .sidebar-toggle-mobile {
+    display: none !important;
+  }
 }
 
 /* 移动端触摸优化 */
@@ -316,6 +331,35 @@ body {
     border-top: 1px solid var(--border-color);
   }
   
+  /* 只在移动端且有collapsed类时添加动画和隐藏效果 */
+  .sidebar.collapsed {
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    border-top: none;
+  }
+  
+
+  
+  /* 移动端切换按钮 */
+  .sidebar-toggle-mobile {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: var(--primary-color) !important;
+    border: 2px solid white !important;
+    box-shadow: 0 4px 12px rgba(248, 187, 217, 0.4);
+    width: 56px !important;
+    height: 56px !important;
+  }
+  
+  .sidebar-toggle-mobile:hover {
+    background: var(--accent-color) !important;
+    transform: scale(1.05);
+  }
+  
   .content-area {
     order: 1;
     padding: 15px;
@@ -342,12 +386,16 @@ body {
   }
   
   .el-menu-item {
-    min-width: 140px;
+    min-width: 200px;
     margin: 4px 8px 4px 0;
     flex-shrink: 0;
-    height: 44px;
-    line-height: 44px;
-    font-size: 14px;
+    height: 48px;
+    line-height: 48px;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 16px;
   }
   
   .menu-title {
@@ -368,22 +416,72 @@ body {
   
   /* 移动端转换器适配 */
   .convert-actions {
+    display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+    align-items: stretch;
+    width: 100%;
   }
   
   .convert-button, .reset-button {
     width: 100%;
-    padding: 14px 20px;
+    padding: 16px 20px;
+    font-size: 16px;
+    height: auto;
+    margin: 0 !important;
   }
   
   .el-row {
-    flex-direction: column;
+    flex-direction: column !important;
+    gap: 0;
+    width: 100% !important;
   }
   
   .el-col {
     width: 100% !important;
-    margin-bottom: 15px;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    margin-bottom: 20px;
+  }
+  
+  /* 移动端表单项优化 */
+  .el-form-item {
+    margin-bottom: 20px;
+    width: 100% !important;
+  }
+  
+  .el-form-item__content {
+    width: 100% !important;
+  }
+  
+  .el-input {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .el-select {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .el-input__wrapper {
+    min-height: 44px;
+    width: 100% !important;
+  }
+  
+  .el-select .el-input__wrapper {
+    min-height: 44px;
+    width: 100% !important;
+  }
+  
+  /* 强制覆盖Element Plus的栅格系统 */
+  .conversion-settings .el-row {
+    display: block !important;
+  }
+  
+  .conversion-settings .el-col {
+    display: block !important;
+    width: 100% !important;
   }
 }
 

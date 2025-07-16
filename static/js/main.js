@@ -11,7 +11,9 @@ const app = createApp({
       serverStatus: {
         type: 'info',
         text: '检查中...'
-      }
+      },
+      isMobile: false,
+      sidebarCollapsed: true // 移动端默认收起
     }
   },
 
@@ -19,6 +21,10 @@ const app = createApp({
     this.checkServerStatus();
     // 定期检查服务状态
     setInterval(this.checkServerStatus, 30000); // 每30秒检查一次
+    
+    // 检测移动端
+    this.detectMobile();
+    window.addEventListener('resize', this.detectMobile);
   },
 
   methods: {
@@ -64,6 +70,16 @@ const app = createApp({
         duration: 3000,
         showClose: true
       });
+    },
+
+    // 检测移动端
+    detectMobile() {
+      this.isMobile = window.innerWidth <= 768;
+    },
+
+    // 切换侧边栏
+    toggleSidebar() {
+      this.sidebarCollapsed = !this.sidebarCollapsed;
     }
   },
 
