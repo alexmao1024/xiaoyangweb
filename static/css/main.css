@@ -101,6 +101,7 @@ body {
   height: 80px !important;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 30px;
 }
 
@@ -124,6 +125,14 @@ body {
   color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
   margin-top: 4px;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
 }
 
 /* 主容器 */
@@ -342,27 +351,117 @@ body {
   
 
   
-  /* 移动端切换按钮 */
+  /* 移动端切换按钮 - 导航栏拉手 */
   .sidebar-toggle-mobile {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1000;
-    background: var(--primary-color) !important;
-    border: 2px solid white !important;
-    box-shadow: 0 4px 12px rgba(248, 187, 217, 0.4);
-    width: 56px !important;
-    height: 56px !important;
+    bottom: 79px; /* 与导航栏无缝连接 */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1001;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 -2px 15px rgba(248, 187, 217, 0.4);
+    width: 50px !important;
+    height: 25px !important;
+    border-radius: 12px 12px 0 0 !important; /* 上半圆 */
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border-bottom: none !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  /* 在按钮中央添加三条小横线指示器 */
+  .sidebar-toggle-mobile::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 1px;
+    box-shadow: 
+      0 -4px 0 rgba(255, 255, 255, 0.8),
+      0 4px 0 rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
   }
   
   .sidebar-toggle-mobile:hover {
-    background: var(--accent-color) !important;
-    transform: scale(1.05);
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 -4px 20px rgba(248, 187, 217, 0.6);
+    height: 28px !important;
+  }
+  
+  .sidebar-toggle-mobile:hover::before {
+    width: 24px;
+    box-shadow: 
+      0 -5px 0 rgba(255, 255, 255, 1),
+      0 5px 0 rgba(255, 255, 255, 1);
+  }
+  
+  .sidebar-toggle-mobile .el-icon {
+    display: none; /* 隐藏图标，使用伪元素样式 */
+  }
+  
+  /* 当导航栏收起时，按钮贴底部 */
+  .sidebar-toggle-mobile.nav-hidden {
+    bottom: 0px; /* 贴在页面底部 */
+    border-radius: 25px 25px 0 0 !important;
+    width: 60px !important;
+    height: 30px !important;
+    box-shadow: 0 -2px 15px rgba(248, 187, 217, 0.5);
+    border-bottom: none !important;
+  }
+  
+  .sidebar-toggle-mobile.nav-hidden:hover {
+    transform: translateX(-50%) translateY(-3px);
+    height: 35px !important;
+  }
+  
+  /* 收起状态时显示上箭头 */
+  .sidebar-toggle-mobile.nav-hidden::before {
+    width: 0;
+    height: 0;
+    background: none;
+    box-shadow: none;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 8px solid rgba(255, 255, 255, 0.9);
+    border-radius: 0;
+    top: 45%;
+  }
+  
+  .sidebar-toggle-mobile.nav-hidden:hover::before {
+    border-bottom-color: rgba(255, 255, 255, 1);
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  
+  /* 柔和呼吸动画 */
+  @keyframes softBreathe {
+    0%, 100% {
+      box-shadow: 0 -2px 15px rgba(248, 187, 217, 0.4);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    50% {
+      box-shadow: 0 -2px 20px rgba(248, 187, 217, 0.6);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+  }
+  
+  .sidebar-toggle-mobile {
+    animation: softBreathe 4s ease-in-out infinite;
   }
   
   .content-area {
     order: 1;
-    padding: 15px;
+    padding: 15px 15px 100px 15px; /* 底部增加空间避免被导航栏遮挡 */
+  }
+
+  /* 移动端状态栏在头部右侧显示较小 */
+  .header-status {
+    font-size: 12px;
+    gap: 6px;
   }
   
   .header {
@@ -378,27 +477,103 @@ body {
     display: none;
   }
   
-  /* 移动端工具菜单水平布局 */
+  /* 移动端底部导航栏设计 */
+  .sidebar {
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 -2px 12px rgba(248, 187, 217, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    border-right: none;
+    z-index: 1000;
+    width: 100% !important;
+    order: 3;
+    transition: transform 0.3s ease;
+  }
+  
+  /* 收缩状态 */
+  .sidebar.collapsed {
+    transform: translateY(100%);
+  }
+  
   .tool-menu {
     display: flex !important;
-    overflow-x: auto;
-    padding: 0 15px 15px;
+    height: 100%;
+    background: none !important;
+    border: none !important;
+    padding: 5px 8px;
+    justify-content: space-around;
+    align-items: center;
   }
   
   .el-menu-item {
-    min-width: 200px;
-    margin: 4px 8px 4px 0;
-    flex-shrink: 0;
-    height: 48px;
-    line-height: 48px;
-    font-size: 13px;
+    flex: 1;
+    max-width: 70px;
+    height: 60px !important;
+    line-height: 1.2 !important;
+    margin: 0 1px;
+    border-radius: var(--radius-medium);
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 6px 2px !important;
+    font-size: 9px;
+    color: white !important;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  
+  .el-menu-item:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    transform: translateY(-2px);
+  }
+  
+  .el-menu-item.is-active {
+    background: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+  }
+  
+  .el-menu-item .el-icon {
+    font-size: 18px;
+    margin-bottom: 2px;
+  }
+  
+  .el-menu-item span {
+    font-size: 9px;
+    text-align: center;
+    line-height: 1.1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0 16px;
+    max-width: 100%;
+  }
+  
+  .el-menu-item .el-tag {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    font-size: 7px;
+    padding: 1px 3px;
+    height: auto;
+    line-height: 1;
+    border-radius: 4px;
   }
   
   .menu-title {
+    display: none;
+  }
+  
+  .el-divider {
     display: none;
   }
   

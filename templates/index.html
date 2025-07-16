@@ -18,7 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue/dist/index.iife.js"></script>
     
     <!-- 自定义样式 -->
-    <link rel="stylesheet" href="/static/css/main.css?v=3.8">
+    <link rel="stylesheet" href="/static/css/main.css?v=4.2">
     
     <!-- 样式加载检测 -->
     <style>
@@ -53,23 +53,24 @@
                 </h1>
                 <div class="subtitle">用❤️为我最爱的人制作</div>
             </div>
+            <div class="header-status">
+                <span>小羊的工具箱 v1.0 | 运行状态：</span>
+                <el-tag :type="serverStatus.type" size="small">[[ serverStatus.text ]]</el-tag>
+            </div>
         </el-header>
 
         <!-- 主要内容区 -->
         <el-container class="main-container">
-            <!-- 移动端侧边栏切换按钮 -->
+            <!-- 移动端导航栏切换按钮 -->
             <el-button 
                 v-show="isMobile"
                 class="sidebar-toggle-mobile"
+                :class="{ 'nav-hidden': sidebarCollapsed }"
                 @click="toggleSidebar"
-                circle
                 type="primary"
-                size="large"
+                size="small"
             >
-                <el-icon>
-                    <Plus v-if="sidebarCollapsed" />
-                    <Minus v-else />
-                </el-icon>
+                <!-- 样式由CSS伪元素控制 -->
             </el-button>
             
             <!-- 侧边栏 - 工具导航 -->
@@ -90,7 +91,7 @@
                         <el-tag size="small" type="success">已上线</el-tag>
                     </el-menu-item>
                     
-                    <el-divider>📋 规划中</el-divider>
+                    <el-divider>📋规划</el-divider>
                     <el-menu-item index="caj-converter" disabled>
                         <el-icon><Reading /></el-icon>
                         <span>CAJ转PDF</span>
@@ -106,18 +107,6 @@
                     <el-menu-item index="knowledge-base" disabled>
                         <el-icon><Collection /></el-icon>
                         <span>个人知识库</span>
-                        <el-tag size="small" type="info">计划中</el-tag>
-                    </el-menu-item>
-                    
-                    <el-menu-item index="password-gen" disabled>
-                        <el-icon><Key /></el-icon>
-                        <span>密码生成器</span>
-                        <el-tag size="small" type="info">计划中</el-tag>
-                    </el-menu-item>
-                    
-                    <el-menu-item index="image-tools" disabled>
-                        <el-icon><Picture /></el-icon>
-                        <span>图片处理工具</span>
                         <el-tag size="small" type="info">计划中</el-tag>
                     </el-menu-item>
                 </el-menu>
@@ -143,19 +132,11 @@
                 <document-converter v-if="activeMenu === 'converter'"></document-converter>
             </el-main>
         </el-container>
-
-        <!-- 状态栏 -->
-        <el-footer class="footer">
-            <div class="footer-content">
-                <span>小羊的工具箱 v1.0 | 运行状态：</span>
-                <el-tag :type="serverStatus.type" size="small">[[ serverStatus.text ]]</el-tag>
-            </div>
-        </el-footer>
     </div>
 
     <!-- Vue 组件和应用逻辑 -->
-    <script src="/static/js/api.js?v=3.4"></script>
-    <script src="/static/components/DocumentConverter.js?v=3.4"></script>
-    <script src="/static/js/main.js?v=3.4"></script>
+    <script src="/static/js/api.js?v=4.1"></script>
+    <script src="/static/components/DocumentConverter.js?v=4.1"></script>
+    <script src="/static/js/main.js?v=4.1"></script>
 </body>
 </html> 
