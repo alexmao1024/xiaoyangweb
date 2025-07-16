@@ -2,9 +2,9 @@ import os
 
 class Config:
     # Server Configuration
-    SERVER_URL = os.getenv('SERVER_URL', 'http://192.168.1.145:8002')
-    PORT = int(os.getenv('PORT', 5000))  # Railway 会提供 PORT 环境变量
-    DEBUG = os.getenv('RAILWAY_ENVIRONMENT') != 'production'  # 在Railway生产环境中关闭DEBUG
+    PORT = int(os.getenv('PORT', 5000))
+    DEBUG = True
+    LOG_LEVEL = os.getenv('LOG_LEVEL', 'DEBUG')
     
     # File Upload Configuration
     UPLOAD_FOLDER = 'uploads'

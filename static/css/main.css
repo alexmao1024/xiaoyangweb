@@ -1,0 +1,769 @@
+/* 小羊的工具箱 - 可爱粉色 + 苹果图标风格 */
+
+:root {
+  /* 保持原来可爱的粉色配色 */
+  --primary-color: #f8bbd9;
+  --secondary-color: #f5dde8;
+  --accent-color: #ff69b4;
+  --success-color: #34C759;
+  --warning-color: #FF9500;
+  --error-color: #FF3B30;
+  
+  /* 文字颜色 */
+  --text-primary: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --text-tertiary: #bdc3c7;
+  
+  /* 背景颜色 */
+  --background-light: #fef9fb;
+  --background-secondary: #ffffff;
+  --background-tertiary: #f8f9fa;
+  
+  /* 边框和分割线 */
+  --border-color: #f0f0f0;
+  --separator-color: #e9ecef;
+  
+  /* 阴影效果 - 苹果风格但保持粉色调 */
+  --shadow-light: 0 2px 12px 0 rgba(248, 187, 217, 0.1);
+  --shadow-medium: 0 4px 16px 0 rgba(248, 187, 217, 0.15);
+  --shadow-large: 0 8px 25px 0 rgba(248, 187, 217, 0.2);
+  
+  /* 圆角 - 苹果风格 */
+  --radius-small: 8px;
+  --radius-medium: 12px;
+  --radius-large: 16px;
+  --radius-extra: 20px;
+  
+  /* 渐变背景 */
+  --gradient-bg: linear-gradient(135deg, #fef9fb 0%, #f5dde8 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* 移动端触摸优化 */
+@media (hover: none) and (pointer: coarse) {
+  .el-menu-item:hover {
+    transform: none;
+    background: var(--background-tertiary) !important;
+  }
+  
+  .el-button:hover {
+    transform: none;
+  }
+  
+  .upload-dragger:hover {
+    transform: none;
+  }
+  
+  .el-card:hover {
+    transform: none;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: var(--gradient-bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 头部样式 */
+.header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-light);
+  height: 80px !important;
+  display: flex;
+  align-items: center;
+  padding: 0 30px;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.title {
+  color: white;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* 主容器 */
+.main-container {
+  flex: 1;
+  background: transparent;
+}
+
+/* 移动端菜单滚动条隐藏 */
+.tool-menu::-webkit-scrollbar {
+  display: none;
+}
+
+.tool-menu {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+  background: white;
+  box-shadow: var(--shadow-light);
+  border-right: 1px solid var(--border-color);
+}
+
+.tool-menu {
+  border: none !important;
+  background: transparent !important;
+}
+
+.menu-title {
+  padding: 24px 20px 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 17px;
+  letter-spacing: -0.02em;
+  border-bottom: 1px solid var(--separator-color);
+  margin-bottom: 8px;
+}
+
+.el-menu-item {
+  height: 52px;
+  line-height: 52px;
+  margin: 4px 12px;
+  border-radius: var(--radius-medium);
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.el-menu-item:hover {
+  background: var(--background-tertiary) !important;
+  color: var(--primary-color) !important;
+  transform: scale(1.02);
+  box-shadow: var(--shadow-small);
+}
+
+.el-menu-item.is-active {
+  background: var(--primary-color) !important;
+  color: white !important;
+  box-shadow: var(--shadow-medium);
+}
+
+.el-menu-item.is-disabled {
+  opacity: 0.6;
+}
+
+.el-menu-item .el-tag {
+  margin-left: auto;
+}
+
+/* 主内容区 */
+.content-area {
+  background: transparent;
+  padding: 30px;
+}
+
+/* 欢迎页面 */
+.welcome-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 400px;
+}
+
+.welcome-card {
+  max-width: 500px;
+  border-radius: 20px;
+  box-shadow: var(--shadow-light);
+  border: 1px solid var(--border-color);
+  background: white;
+}
+
+.welcome-content {
+  text-align: center;
+  padding: 40px 30px;
+}
+
+.welcome-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+
+
+
+.welcome-content h2 {
+  color: var(--text-primary);
+  margin-bottom: 15px;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.welcome-content p {
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* 底部状态栏 */
+.footer {
+  background: white;
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -2px 12px 0 rgba(248, 187, 217, 0.1);
+  height: 50px !important;
+  display: flex;
+  align-items: center;
+  padding: 0 30px;
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Element Plus 组件定制 */
+.el-button--primary {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  border-radius: var(--radius-medium);
+  padding: 12px 30px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.el-button--primary:hover {
+  background: #ff1493;
+  border-color: #ff1493;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
+}
+
+.el-card {
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-light);
+  border: 1px solid var(--border-color);
+  background: white;
+}
+
+.el-divider {
+  margin: 20px 0;
+  border-color: var(--border-color);
+}
+
+.el-divider__text {
+  color: var(--text-secondary);
+  font-weight: 600;
+  background: white;
+  padding: 0 15px;
+}
+
+.el-tag {
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.el-tag--success {
+  background: #e8f5e8;
+  color: #52c41a;
+  border-color: #b7eb8f;
+}
+
+.el-tag--info {
+  background: #f0f0f0;
+  color: #8c8c8c;
+  border-color: #d9d9d9;
+}
+
+/* 移动端响应式设计 */
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100% !important;
+    height: auto;
+    order: 2;
+    border-right: none;
+    border-top: 1px solid var(--border-color);
+  }
+  
+  .content-area {
+    order: 1;
+    padding: 15px;
+  }
+  
+  .header {
+    padding: 0 15px;
+    height: 60px !important;
+  }
+  
+  .title {
+    font-size: 20px;
+  }
+  
+  .subtitle {
+    display: none;
+  }
+  
+  /* 移动端工具菜单水平布局 */
+  .tool-menu {
+    display: flex !important;
+    overflow-x: auto;
+    padding: 0 15px 15px;
+  }
+  
+  .el-menu-item {
+    min-width: 140px;
+    margin: 4px 8px 4px 0;
+    flex-shrink: 0;
+    height: 44px;
+    line-height: 44px;
+    font-size: 14px;
+  }
+  
+  .menu-title {
+    display: none;
+  }
+  
+  .welcome-content {
+    padding: 20px 15px;
+  }
+  
+  .welcome-icon {
+    font-size: 60px;
+  }
+  
+  .welcome-content h2 {
+    font-size: 24px;
+  }
+  
+  /* 移动端转换器适配 */
+  .convert-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .convert-button, .reset-button {
+    width: 100%;
+    padding: 14px 20px;
+  }
+  
+  .el-row {
+    flex-direction: column;
+  }
+  
+  .el-col {
+    width: 100% !important;
+    margin-bottom: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    height: 56px !important;
+  }
+  
+  .title {
+    font-size: 18px;
+  }
+  
+  .content-area {
+    padding: 12px;
+  }
+  
+  .el-menu-item {
+    min-width: 120px;
+    font-size: 13px;
+  }
+  
+  .welcome-content h2 {
+    font-size: 22px;
+  }
+  
+  .document-converter {
+    margin: 0 -5px;
+  }
+  
+  .converter-card, .history-card {
+    margin-bottom: 15px;
+  }
+}
+
+/* 苹果风格滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-tertiary);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+  background-clip: content-box;
+}
+
+/* 苹果风格聚焦效果 */
+.el-input__wrapper.is-focus,
+.el-select__wrapper.is-focused {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1) !important;
+}
+
+/* 苹果风格按钮悬停 */
+.el-button:not(.el-button--primary) {
+  background: var(--background-secondary);
+  border-color: var(--separator-color);
+  color: var(--text-primary);
+  font-weight: 500;
+  border-radius: var(--radius-medium);
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.el-button:not(.el-button--primary):hover {
+  background: var(--background-tertiary);
+  border-color: var(--text-tertiary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-small);
+}
+
+/* 苹果风格毛玻璃效果 */
+.header, .sidebar, .el-card {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* 苹果风格图标 */
+.el-icon {
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+/* 苹果风格图标悬停效果 */
+.el-menu-item:hover .el-icon {
+  transform: scale(1.1);
+}
+
+.el-button:hover .el-icon {
+  transform: scale(1.05);
+}
+
+/* 微妙的动画 */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.welcome-icon {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* 苹果风格的卡片阴影悬停效果 */
+.el-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+  transition: all 0.3s ease;
+}
+
+/* 更细致的交互反馈 */
+.el-menu-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.el-menu-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.el-menu-item:hover::before {
+  left: 100%;
+}
+
+/* 加载动画 */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+/* 工具提示样式 */
+.el-tooltip__popper {
+  border-radius: 8px;
+  box-shadow: var(--shadow-light);
+}
+
+/* 文档转换器组件样式 */
+.document-converter {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.converter-card, .history-card {
+  margin-bottom: 30px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.card-header h2, .card-header h3 {
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.card-header p {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 14px;
+}
+
+.status-alert {
+  margin-bottom: 25px;
+  border-radius: 12px;
+  border: none;
+}
+
+.upload-section {
+  margin-bottom: 30px;
+}
+
+.upload-dragger {
+  border-radius: var(--radius-large);
+  border: 2px dashed var(--primary-color) !important;
+  background: var(--background-light) !important;
+  transition: all 0.3s ease;
+}
+
+.upload-dragger:hover {
+  border-color: var(--accent-color) !important;
+  background: white !important;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-light);
+}
+
+.el-icon--upload {
+  font-size: 48px;
+  color: var(--primary-color);
+  margin-bottom: 16px;
+}
+
+.el-upload__text {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.el-upload__text em {
+  color: var(--accent-color);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.el-upload__tip {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.conversion-settings {
+  margin-bottom: 30px;
+}
+
+.format-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.format-option .el-tag {
+  margin-left: auto;
+}
+
+.format-info {
+  margin-top: 15px;
+  border-radius: 10px;
+  border: none;
+}
+
+.convert-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.convert-button, .reset-button {
+  border-radius: 25px;
+  padding: 12px 30px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.convert-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
+}
+
+.reset-button {
+  background: white;
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.reset-button:hover {
+  border-color: var(--primary-color);
+  color: var(--accent-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-light);
+}
+
+.progress-section {
+  margin-top: 25px;
+  padding: 20px;
+  background: var(--background-light);
+  border-radius: var(--radius-large);
+  border: 1px solid var(--border-color);
+}
+
+.progress-bar {
+  margin-bottom: 15px;
+}
+
+.progress-text {
+  text-align: center;
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.history-card .el-timeline {
+  padding: 10px 0;
+}
+
+.history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.history-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.error-text {
+  color: #f56c6c;
+  font-size: 12px;
+}
+
+/* Element Plus 组件定制增强 */
+.el-form-item__label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.el-input__wrapper {
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.el-input__wrapper:hover {
+  border-color: var(--primary-color);
+}
+
+.el-input__wrapper.is-focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(255, 105, 180, 0.1);
+}
+
+.el-select__wrapper {
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.el-select__wrapper:hover {
+  border-color: var(--primary-color);
+}
+
+.el-select__wrapper.is-focused {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(255, 105, 180, 0.1);
+}
+
+.el-progress-bar__outer {
+  border-radius: var(--radius-small);
+  background: var(--background-tertiary);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.el-progress-bar__inner {
+  border-radius: var(--radius-small);
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  box-shadow: 0 1px 3px rgba(0, 122, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.el-timeline-item__timestamp {
+  color: var(--text-secondary);
+  font-size: 12px;
+} 
