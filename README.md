@@ -81,12 +81,7 @@
 - **安装依赖**:
 
   ```bash
-
-  ```
 - pip install -r requirements.txt
-
-  ```
-
   ```
 - **启动应用**:
 
