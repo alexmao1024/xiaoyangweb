@@ -62,20 +62,44 @@ def convert():
         output_filename_base = filename.rsplit('.', 1)[0]
         logger.debug(f"输入文件扩展名: {file_extension}, 基础文件名: {output_filename_base}")
         
+        # 清理文件名：处理过长和特殊字符
+        def clean_filename(name):
+            # 替换可能有问题的字符
+            import re
+            name = re.sub(r'[、。，；：""''（）【】《》？！]', '_', name)
+            name = re.sub(r'[^\w\-_\u4e00-\u9fff]', '_', name)  # 保留中文、英文、数字、下划线、连字符
+            # 限制长度
+            if len(name) > 50:
+                name = name[:50]
+            return name
+        
+        clean_base = clean_filename(output_filename_base)
+        logger.debug(f"清理后的基础文件名: {clean_base}")
+        
         output_ext = export_format.lower()
         if output_ext == 'markdown': 
             output_ext = 'md'
         elif output_ext == 'xlsx':
             output_ext = 'xlsx'
         
-        output_filename = f"{output_filename_base}.{output_ext}"
+        output_filename = f"{clean_base}.{output_ext}"
         output_path = os.path.join(current_app.config['OUTPUT_FOLDER'], output_filename)
+        logger.debug(f"最终输出路径: {output_path}")
 
         # 使用统一的文档转换器
         converter = get_document_converter()
         converter.convert_document(input_path, output_path, export_format)
         
-        logger.info(f"转换成功: {output_path}")
+        # 验证输出文件是否真的存在
+        if not os.path.exists(output_path):
+            logger.error(f"❌ 转换器声称成功，但输出文件不存在: {output_path}")
+            raise Exception(f"转换失败：输出文件未生成。可能是文件名过长或包含特殊字符导致的问题。")
+        
+        if os.path.getsize(output_path) == 0:
+            logger.error(f"❌ 输出文件存在但为空: {output_path}")
+            raise Exception("转换失败：生成的文件为空")
+        
+        logger.info(f"✅ 转换成功: {output_path} (大小: {os.path.getsize(output_path)} bytes)")
 
         # 将输出文件读入内存
         with open(output_path, 'rb') as f:
@@ -87,14 +111,15 @@ def convert():
 
         buffer.seek(0)
         
-        # 返回文件
+        # 返回文件，使用原始文件名作为下载名
+        original_output_filename = f"{output_filename_base}.{output_ext}"
         mimetype = current_app.config['ALLOWED_EXTENSIONS'].get(output_ext, 'application/octet-stream')
         
         return send_file(
             buffer,
             mimetype=mimetype,
             as_attachment=True,
-            download_name=output_filename
+            download_name=original_output_filename
         )
 
     except Exception as e:

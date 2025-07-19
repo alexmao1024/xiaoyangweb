@@ -13,6 +13,43 @@ from .caj_converter import CAJConverter, convert_caj_to_pdf
 
 logger = logging.getLogger(__name__)
 
+# 尝试导入pdf2docx
+try:
+    from pdf2docx import Converter as PDF2DOCXConverter
+    PDF2DOCX_AVAILABLE = True
+    logger.info("pdf2docx库可用，支持直接PDF转Word")
+except ImportError:
+    PDF2DOCX_AVAILABLE = False
+    logger.warning("pdf2docx库不可用，PDF转Word将使用Markdown中转")
+
+# 尝试导入docx2pdf
+try:
+    from docx2pdf import convert as docx2pdf_convert
+    DOCX2PDF_AVAILABLE = True
+    logger.info("docx2pdf库可用，支持微软Word直接转换")
+except ImportError:
+    DOCX2PDF_AVAILABLE = False
+    logger.warning("docx2pdf库不可用，DOCX转PDF将使用pypandoc")
+
+# 确保pandoc可用（conda安装，速度最快）
+try:
+    pypandoc.get_pandoc_version()
+    logger.info("Pandoc已安装")
+except OSError:
+    logger.info("Pandoc未找到，正在使用conda安装...")
+    try:
+        import subprocess
+        result = subprocess.run(['conda', 'install', '-c', 'conda-forge', 'pandoc', '-y'], 
+                              capture_output=True, text=True, timeout=120)
+        if result.returncode == 0:
+            logger.info("Conda安装pandoc成功")
+        else:
+            logger.error(f"Conda安装失败: {result.stderr}")
+    except Exception as e:
+        logger.error(f"Conda安装pandoc失败: {e}")
+except Exception as e:
+    logger.warning(f"检查Pandoc版本失败: {e}")
+
 class DocumentConverter:
     """统一文档转换器"""
     
@@ -43,6 +80,14 @@ class DocumentConverter:
             # CAJ文件转换（自动处理真正的CAJ和伪装的PDF）
             logger.debug("选择CAJ转换策略")
             self._convert_caj_file(input_path, output_path, export_format)
+        elif file_extension == 'pdf' and export_format == 'DOCX' and PDF2DOCX_AVAILABLE:
+            # PDF直接转Word（保持格式）
+            logger.debug("选择pdf2docx直接转换策略")
+            self._convert_pdf_to_docx_direct(input_path, output_path)
+        elif file_extension in ['docx', 'doc'] and export_format == 'PDF':
+            # DOCX/DOC使用pandoc直接转PDF（需要LaTeX引擎）
+            logger.debug("选择pandoc直接转换策略")
+            self._convert_docx_to_pdf_with_pandoc(input_path, output_path)
         elif file_extension == 'md' and export_format in ['PDF', 'DOCX', 'XLSX']:
             # Markdown 本地转换
             logger.debug("选择本地Markdown转换策略")
@@ -52,7 +97,6 @@ class DocumentConverter:
             logger.debug("选择Docling转换策略")
             self._convert_with_docling(input_path, output_path, export_format)
         else:
-            # 回退到外部 API（如果配置了的话）
             logger.debug("没有可用的转换策略")
             raise Exception(f"不支持的转换: {file_extension} -> {export_format}")
     
@@ -63,6 +107,14 @@ class DocumentConverter:
     def _should_use_docling(self, file_extension: str, export_format: str) -> bool:
         """判断是否应该使用 Docling 转换"""
         if not is_docling_available():
+            return False
+        
+        # PDF转DOCX优先使用pdf2docx
+        if file_extension == 'pdf' and export_format == 'DOCX' and PDF2DOCX_AVAILABLE:
+            return False
+        
+        # DOCX/DOC转PDF优先使用pypandoc
+        if file_extension in ['docx', 'doc'] and export_format == 'PDF':
             return False
         
         # 需要 OCR 或复杂解析的格式
@@ -126,6 +178,13 @@ class DocumentConverter:
             extra_args = ['--pdf-engine=xelatex', '-V', 'mainfont=SimSun']
             pypandoc.convert_file(input_path, 'pdf', outputfile=output_path, extra_args=extra_args)
             logger.info("Pandoc PDF 转换成功")
+        except OSError as e:
+            if "No pandoc was found" in str(e):
+                logger.error("Pandoc未安装，请运行: conda install -c conda-forge pandoc")
+                raise Exception("Pandoc未安装")
+            else:
+                logger.error(f"Pandoc PDF 转换失败: {e}")
+                raise
         except Exception as e:
             logger.error(f"Pandoc PDF 转换失败: {e}")
             raise
@@ -136,6 +195,13 @@ class DocumentConverter:
             logger.info(f"Pandoc DOCX 转换: {input_path} -> {output_path}")
             pypandoc.convert_file(input_path, 'docx', outputfile=output_path)
             logger.info("Pandoc DOCX 转换成功")
+        except OSError as e:
+            if "No pandoc was found" in str(e):
+                logger.error("Pandoc未安装，请运行: conda install -c conda-forge pandoc")
+                raise Exception("Pandoc未安装")
+            else:
+                logger.error(f"Pandoc DOCX 转换失败: {e}")
+                raise
         except Exception as e:
             logger.error(f"Pandoc DOCX 转换失败: {e}")
             raise
@@ -176,6 +242,230 @@ class DocumentConverter:
             logger.error(f"Markdown 转 Excel 失败: {e}")
             raise
     
+    def _convert_pdf_to_docx_direct(self, input_path: str, output_path: str) -> None:
+        """直接PDF转DOCX（保持格式）"""
+        try:
+            logger.info(f"pdf2docx 直接转换: {input_path} -> {output_path}")
+            
+            # 直接转换
+            cv = PDF2DOCXConverter(input_path)
+            cv.convert(
+                output_path, 
+                start=0, 
+                end=None,
+                multi_processing=False,  # 禁用多进程避免兼容性问题
+                cpu_count=1  # 使用单线程
+            )
+            cv.close()
+            logger.info("✅ pdf2docx 直接转换成功")
+            
+        except Exception as e:
+            error_msg = str(e).lower()
+            
+            # 友好的错误提示
+            if "colorspace" in error_msg or "png" in error_msg:
+                logger.warning(f"pdf2docx遇到图像兼容性问题: {e}")
+                logger.info("📋 提示：此PDF可能包含特殊格式的图像，将使用OCR方案处理")
+            elif "font" in error_msg:
+                logger.warning(f"pdf2docx遇到字体问题: {e}")
+            else:
+                logger.error(f"pdf2docx转换失败: {e}")
+            
+            logger.info("🔄 自动回退到Docling + OCR方案...")
+            
+            # 回退到原来的方式
+            try:
+                self._convert_with_docling(input_path, output_path, "DOCX")
+                logger.info("✅ 回退转换成功（可能格式略有差异）")
+            except Exception as fallback_e:
+                logger.error(f"❌ 回退转换也失败: {fallback_e}")
+                raise Exception(f"PDF转Word失败: pdf2docx错误={e}, 回退错误={fallback_e}")
+    
+    def _convert_docx_to_pdf_with_pandoc(self, input_path: str, output_path: str) -> None:
+        """使用pandoc直接转换DOCX为PDF（推荐方案）"""
+        try:
+            logger.info(f"pypandoc 转换: {input_path} -> {output_path}")
+            
+            # 自动检测可用的LaTeX引擎
+            engines = ['xelatex', 'pdflatex', 'lualatex']
+            available_engine = None
+            
+            for engine in engines:
+                try:
+                    import subprocess
+                    result = subprocess.run([engine, '--version'], 
+                                          capture_output=True, timeout=5)
+                    if result.returncode == 0:
+                        available_engine = engine
+                        logger.info(f"✅ 检测到可用的LaTeX引擎: {engine}")
+                        break
+                except:
+                    continue
+            
+            if not available_engine:
+                logger.warning("⚠️ 未检测到LaTeX引擎，尝试默认转换")
+                # 不指定引擎，让pandoc自己选择
+                pypandoc.convert_file(input_path, 'pdf', outputfile=output_path)
+            else:
+                # 使用检测到的引擎，配置中文支持
+                extra_args = [f'--pdf-engine={available_engine}']
+                
+                if available_engine == 'xelatex':
+                    # XeLaTeX对中文支持最好
+                    extra_args.extend([
+                        '-V', 'mainfont=PingFang SC',  # macOS中文字体
+                        '-V', 'CJKmainfont=PingFang SC'
+                    ])
+                elif available_engine == 'lualatex':
+                    # LuaLaTeX也支持中文
+                    extra_args.extend([
+                        '-V', 'mainfont=PingFang SC'
+                    ])
+                
+                logger.info(f"🔧 使用引擎: {available_engine}")
+                pypandoc.convert_file(
+                    input_path, 
+                    'pdf', 
+                    outputfile=output_path,
+                    extra_args=extra_args
+                )
+            
+            # 验证转换结果
+            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+                logger.info("✅ pypandoc 转换成功")
+            else:
+                raise Exception("转换完成但输出文件无效")
+                
+        except Exception as e:
+            error_msg = str(e).lower()
+            
+            if "not found" in error_msg or "engine" in error_msg:
+                logger.warning(f"LaTeX引擎问题: {e}")
+                logger.info("🔄 回退到Docling + HTML方案...")
+                
+                # 回退到Docling方案
+                try:
+                    self._convert_with_docling(input_path, output_path, "PDF")
+                    logger.info("✅ 回退转换成功")
+                except Exception as fallback_e:
+                    logger.error(f"❌ 回退转换也失败: {fallback_e}")
+                    raise Exception(f"DOCX转PDF失败: pandoc错误={e}, Docling错误={fallback_e}")
+            else:
+                logger.error(f"pypandoc转换失败: {e}")
+                raise Exception(f"DOCX转PDF失败: {e}")
+    
+    def _convert_docx_to_pdf_with_word(self, input_path: str, output_path: str) -> None:
+        """使用微软Word直接转换DOCX为PDF（最佳效果）"""
+        try:
+            logger.info(f"docx2pdf 微软Word转换: {input_path} -> {output_path}")
+            
+            # 使用微软Word进行转换，保持原始格式和样式
+            # 禁用进度条以避免干扰日志输出
+            import sys
+            import os
+            from io import StringIO
+            
+            # 临时重定向stdout来隐藏进度条
+            old_stdout = sys.stdout
+            sys.stdout = StringIO()
+            
+            try:
+                docx2pdf_convert(input_path, output_path)
+            finally:
+                # 恢复stdout
+                sys.stdout = old_stdout
+            
+            # 验证文件是否真的生成了
+            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+                logger.info("✅ docx2pdf 微软Word转换成功，文件已生成")
+            else:
+                logger.warning("⚠️ docx2pdf 声称成功但未生成文件，可能是文件名问题")
+                raise Exception("转换完成但未找到输出文件，可能是文件名过长或包含特殊字符")
+            
+        except Exception as e:
+            error_msg = str(e).lower()
+            
+            # 友好的错误提示
+            if "word" in error_msg or "com" in error_msg:
+                logger.warning(f"微软Word转换失败: {e}")
+                logger.info("📋 提示：可能需要安装Microsoft Word或检查Word版本")
+                logger.info("🔄 自动回退到pypandoc方案...")
+                
+                # 回退到pypandoc
+                try:
+                    self._convert_docx_to_pdf_direct(input_path, output_path)
+                    logger.info("✅ 回退到pypandoc转换成功")
+                except Exception as fallback_e:
+                    logger.error(f"❌ pypandoc回退也失败: {fallback_e}")
+                    # 最后回退到Docling
+                    try:
+                        self._convert_with_docling(input_path, output_path, "PDF")
+                        logger.info("✅ 最终回退到Docling转换成功（可能格式略有差异）")
+                    except Exception as final_e:
+                        raise Exception(f"DOCX转PDF完全失败: Word错误={e}, pypandoc错误={fallback_e}, Docling错误={final_e}")
+            else:
+                logger.error(f"docx2pdf转换失败: {e}")
+                logger.info("🔄 自动回退到pypandoc方案...")
+                
+                # 回退到pypandoc
+                try:
+                    self._convert_docx_to_pdf_direct(input_path, output_path)
+                    logger.info("✅ 回退转换成功")
+                except Exception as fallback_e:
+                    logger.error(f"❌ 回退转换也失败: {fallback_e}")
+                    raise Exception(f"DOCX转PDF失败: docx2pdf错误={e}, 回退错误={fallback_e}")
+    
+    def _convert_docx_to_pdf_direct(self, input_path: str, output_path: str) -> None:
+        """直接DOCX转PDF（保持格式）"""
+        try:
+            logger.info(f"pypandoc 直接转换: {input_path} -> {output_path}")
+            
+            # 使用pandoc直接转换DOCX到PDF，保持格式
+            extra_args = [
+                '--pdf-engine=xelatex',
+                '-V', 'mainfont=SimSun',  # 支持中文
+                '--from=docx',
+                '--to=pdf'
+            ]
+            
+            pypandoc.convert_file(
+                input_path, 
+                'pdf', 
+                outputfile=output_path, 
+                extra_args=extra_args
+            )
+            logger.info("✅ pypandoc DOCX转PDF成功")
+            
+        except Exception as e:
+            error_msg = str(e).lower()
+            
+            # 友好的错误提示
+            if "no pandoc was found" in error_msg:
+                logger.error("Pandoc未安装，请运行: conda install -c conda-forge pandoc")
+                raise Exception("Pandoc未安装")
+            elif "xelatex" in error_msg:
+                logger.warning(f"XeLaTeX引擎问题: {e}")
+                logger.info("🔄 尝试使用默认PDF引擎...")
+                
+                # 回退到默认引擎
+                try:
+                    pypandoc.convert_file(input_path, 'pdf', outputfile=output_path)
+                    logger.info("✅ 使用默认引擎转换成功")
+                except Exception as fallback_e:
+                    logger.error(f"❌ 默认引擎也失败: {fallback_e}")
+                    raise Exception(f"DOCX转PDF失败: {fallback_e}")
+            else:
+                logger.error(f"pypandoc DOCX转PDF失败: {e}")
+                logger.info("🔄 自动回退到Docling + OCR方案...")
+                
+                # 回退到Docling方案
+                try:
+                    self._convert_with_docling(input_path, output_path, "PDF")
+                    logger.info("✅ 回退转换成功（可能格式略有差异）")
+                except Exception as fallback_e:
+                    logger.error(f"❌ 回退转换也失败: {fallback_e}")
+                    raise Exception(f"DOCX转PDF失败: pypandoc错误={e}, 回退错误={fallback_e}")
+    
     def _convert_caj_file(self, input_path: str, output_path: str, export_format: str) -> None:
         """
         转换CAJ文件
@@ -201,9 +491,32 @@ class DocumentConverter:
                     shutil.copy2(input_path, output_path)
                     logger.info(f"PDF文件复制成功: {output_path}")
                 else:
-                    # 使用Docling转换到其他格式
-                    logger.info(f"将PDF文件转换为{export_format}")
-                    self._convert_with_docling(input_path, output_path, export_format)
+                    # 对于其他格式，创建临时PDF文件并使用PDF转换逻辑
+                    import tempfile
+                    import shutil
+                    
+                    temp_dir = tempfile.mkdtemp()
+                    try:
+                        # 创建临时PDF文件（正确的扩展名）
+                        temp_pdf_name = "temp_pdf_file.pdf"
+                        temp_pdf_path = os.path.join(temp_dir, temp_pdf_name)
+                        shutil.copy2(input_path, temp_pdf_path)
+                        logger.info(f"创建临时PDF文件: {temp_pdf_path}")
+                        
+                        # 使用PDF转换逻辑处理
+                        if export_format == 'DOCX' and PDF2DOCX_AVAILABLE:
+                            logger.info("使用pdf2docx直接转换为DOCX")
+                            self._convert_pdf_to_docx_direct(temp_pdf_path, output_path)
+                        else:
+                            logger.info(f"将PDF文件转换为{export_format}")
+                            self._convert_with_docling(temp_pdf_path, output_path, export_format)
+                            
+                    finally:
+                        # 清理临时文件
+                        try:
+                            shutil.rmtree(temp_dir)
+                        except:
+                            pass
                 
                 return
             
@@ -236,7 +549,10 @@ class DocumentConverter:
                             logger.warning(f"大纲提取失败，但不影响转换: {e}")
                     
                     # 步骤2: PDF -> 目标格式
-                    if export_format in ['MARKDOWN', 'TEXT', 'DOCX', 'XLSX']:
+                    if export_format == 'DOCX' and PDF2DOCX_AVAILABLE:
+                        logger.info("步骤2: 使用pdf2docx直接转换为DOCX")
+                        self._convert_pdf_to_docx_direct(pdf_path, output_path)
+                    elif export_format in ['MARKDOWN', 'TEXT', 'DOCX', 'XLSX']:
                         logger.info(f"步骤2: 将PDF转换为{export_format}")
                         self._convert_with_docling(pdf_path, output_path, export_format)
                     else:

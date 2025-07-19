@@ -8,3 +8,6 @@ gunicorn
 docling>=0.16.0
 rapidocr_onnxruntime
 huggingface_hub>=0.17.0
+pdf2docx
+PyMuPDF
+docx2pdf

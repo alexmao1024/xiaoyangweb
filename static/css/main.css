@@ -118,7 +118,53 @@ body {
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
+}
+
+/* 主页按钮样式 */
+.home-button {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1) !important;
+}
+
+.home-button:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(-2px) scale(1.05) !important;
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2) !important;
+}
+
+.home-button:active {
+  transform: translateY(0) scale(0.98) !important;
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1) !important;
+}
+
+.home-button .el-icon {
+  color: white !important;
+  font-size: 18px !important;
+  margin: 0 !important;
+}
+
+/* 移动端主页按钮适配 */
+@media (max-width: 768px) {
+  .home-button {
+    width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+  }
+  
+  .home-button .el-icon {
+    font-size: 16px !important;
+  }
+  
+  .title {
+    font-size: 20px;
+    gap: 12px;
+  }
 }
 
 .subtitle {

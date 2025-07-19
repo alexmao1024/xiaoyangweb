@@ -304,7 +304,7 @@ const DocumentConverter = {
 
     getAvailableFormats(fileExtension) {
       const formatMap = {
-        'pdf': ['markdown', 'text'],
+        'pdf': ['markdown', 'text', 'docx', 'xlsx'],
         'docx': ['markdown', 'text', 'pdf'],
         'doc': ['markdown', 'text', 'pdf'],
         'txt': ['markdown', 'pdf', 'docx'],

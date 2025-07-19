@@ -48,7 +48,15 @@
         <el-header class="header">
             <div class="header-content">
                 <h1 class="title">
-                    <el-icon><House /></el-icon>
+                    <el-button 
+                        class="home-button" 
+                        @click="goHome"
+                        circle
+                        size="large"
+                        type="primary"
+                    >
+                        <el-icon><House /></el-icon>
+                    </el-button>
                     小羊的工具箱
                 </h1>
                 <div class="subtitle">用❤️为我最爱的人制作</div>

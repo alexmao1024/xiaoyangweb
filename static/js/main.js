@@ -80,6 +80,12 @@ const app = createApp({
     // 切换侧边栏
     toggleSidebar() {
       this.sidebarCollapsed = !this.sidebarCollapsed;
+    },
+
+    // 返回主页
+    goHome() {
+      this.activeMenu = 'home';
+      this.showMessage('欢迎回到首页！', 'success');
     }
   },
 

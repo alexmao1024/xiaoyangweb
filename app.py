@@ -5,6 +5,13 @@
 
 import os
 import logging
+
+# 在导入任何其他模块之前设置离线模式
+os.environ['HF_HUB_OFFLINE'] = '1'
+os.environ['TRANSFORMERS_OFFLINE'] = '1'
+os.environ['HF_DATASETS_OFFLINE'] = '1'
+os.environ['HF_HUB_DISABLE_IMPLICIT_TOKEN'] = '1'
+
 from flask import Flask
 from config import Config
 
