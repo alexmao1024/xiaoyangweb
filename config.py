@@ -19,6 +19,7 @@ class Config:
         'html': 'text/html',
         'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'xls': 'application/vnd.ms-excel',
+        'caj': 'application/caj',  # 中国知网CAJ格式
     }
     
     # Conversion Settings

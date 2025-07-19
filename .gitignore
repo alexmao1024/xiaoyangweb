@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+# 但保留第三方库的共享库文件
+!thirdlib/*/lib/bin/*.so
+!thirdlib/*/lib/bin/*.dylib
 .Python
 build/
 develop-eggs/

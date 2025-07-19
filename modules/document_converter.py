@@ -9,6 +9,7 @@ import pandas as pd
 import pypandoc
 from .docling_service import get_docling_processor, is_docling_available
 from .markdown_processor import parse_markdown_to_structured_data
+from .caj_converter import CAJConverter, convert_caj_to_pdf
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,11 @@ class DocumentConverter:
         logger.info(f"开始转换: {input_path} -> {output_path} (格式: {export_format})")
         
         # 根据文件类型和目标格式选择转换策略
-        if file_extension == 'md' and export_format in ['PDF', 'DOCX', 'XLSX']:
+        if file_extension == 'caj':
+            # CAJ文件转换（自动处理真正的CAJ和伪装的PDF）
+            logger.debug("选择CAJ转换策略")
+            self._convert_caj_file(input_path, output_path, export_format)
+        elif file_extension == 'md' and export_format in ['PDF', 'DOCX', 'XLSX']:
             # Markdown 本地转换
             logger.debug("选择本地Markdown转换策略")
             self._convert_markdown_local(input_path, output_path, export_format)
@@ -169,6 +174,105 @@ class DocumentConverter:
             logger.info("Markdown 转 Excel 成功")
         except Exception as e:
             logger.error(f"Markdown 转 Excel 失败: {e}")
+            raise
+    
+    def _convert_caj_file(self, input_path: str, output_path: str, export_format: str) -> None:
+        """
+        转换CAJ文件
+        
+        Args:
+            input_path: CAJ文件路径
+            output_path: 输出文件路径
+            export_format: 目标格式
+        """
+        try:
+            export_format = export_format.upper()
+            
+            # 首先检查文件类型（不使用上下文管理器）
+            converter = CAJConverter()
+            
+            # 检查是否为伪装成CAJ的PDF文件
+            if converter.is_pdf_disguised_as_caj(input_path):
+                logger.info("检测到CAJ文件实际为PDF格式，直接处理")
+                
+                if export_format == 'PDF':
+                    # 直接复制文件
+                    import shutil
+                    shutil.copy2(input_path, output_path)
+                    logger.info(f"PDF文件复制成功: {output_path}")
+                else:
+                    # 使用Docling转换到其他格式
+                    logger.info(f"将PDF文件转换为{export_format}")
+                    self._convert_with_docling(input_path, output_path, export_format)
+                
+                return
+            
+            # 检查是否为真正的CAJ文件
+            if not converter.is_caj_file(input_path):
+                raise ValueError("不是有效的CAJ文件")
+            
+            # 处理真正的CAJ文件
+            logger.info("检测到真正的CAJ文件，使用caj2pdf转换")
+            
+            if export_format != 'PDF':
+                # 先转换为PDF，再转换为目标格式
+                logger.info(f"CAJ文件需要先转换为PDF，再转换为{export_format}")
+                
+                # 创建临时PDF文件
+                import tempfile
+                temp_dir = tempfile.mkdtemp()
+                
+                try:
+                    # 步骤1: CAJ -> PDF
+                    logger.info("步骤1: 将CAJ文件转换为PDF")
+                    with CAJConverter() as conv_ctx:
+                        pdf_path = conv_ctx.convert_to_pdf(input_path, temp_dir)
+                        
+                        # 提取大纲（可选）
+                        try:
+                            conv_ctx.extract_outlines(input_path, pdf_path)
+                            logger.info("成功提取CAJ文件大纲信息")
+                        except Exception as e:
+                            logger.warning(f"大纲提取失败，但不影响转换: {e}")
+                    
+                    # 步骤2: PDF -> 目标格式
+                    if export_format in ['MARKDOWN', 'TEXT', 'DOCX', 'XLSX']:
+                        logger.info(f"步骤2: 将PDF转换为{export_format}")
+                        self._convert_with_docling(pdf_path, output_path, export_format)
+                    else:
+                        raise Exception(f"不支持将CAJ文件转换为{export_format}格式")
+                        
+                finally:
+                    # 清理临时文件
+                    import shutil
+                    try:
+                        shutil.rmtree(temp_dir)
+                    except:
+                        pass
+            else:
+                # 直接转换为PDF
+                logger.info("直接将CAJ文件转换为PDF")
+                output_dir = os.path.dirname(output_path)
+                
+                with CAJConverter() as conv_ctx:
+                    pdf_path = conv_ctx.convert_to_pdf(input_path, output_dir)
+                    
+                    # 如果输出路径不同，移动文件
+                    if pdf_path != output_path:
+                        import shutil
+                        shutil.move(pdf_path, output_path)
+                    
+                    # 提取大纲（可选）
+                    try:
+                        conv_ctx.extract_outlines(input_path, output_path)
+                        logger.info("成功提取CAJ文件大纲信息")
+                    except Exception as e:
+                        logger.warning(f"大纲提取失败，但不影响转换: {e}")
+            
+            logger.info(f"CAJ文件转换成功: {input_path} -> {output_path}")
+            
+        except Exception as e:
+            logger.error(f"CAJ文件转换失败: {e}")
             raise
 
 # 全局转换器实例

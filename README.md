@@ -119,6 +119,25 @@
 
 ---
 
+## 第三方库引用
+
+本项目使用了以下第三方开源库：
+
+### CAJ转PDF功能
+- **[caj2pdf](https://github.com/caj2pdf/caj2pdf)**
+  - 许可证：GLWTPL (Good Luck With That Public License)
+  - 用途：将中国知网CAJ格式文献转换为PDF
+  - 版本：基于主分支最新版本
+  - 预编译库：[caj2pdf-extra-libs](https://github.com/caj2pdf/caj2pdf-extra-libs)
+
+### 文档处理
+- **[Docling](https://github.com/DS4SD/docling)**：智能文档解析和转换
+- **[RapidOCR](https://github.com/RapidAI/RapidOCR)**：光学字符识别
+
+感谢所有开源项目的贡献者！
+
+---
+
 <p align="center">
   <em>用 ❤️ 为我最爱的人制作</em>
 </p>

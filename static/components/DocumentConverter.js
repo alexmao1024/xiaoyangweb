@@ -46,7 +46,7 @@ const DocumentConverter = {
             </div>
             <template #tip>
               <div class="el-upload__tip">
-                支持格式：PDF、Word、Excel、Markdown、HTML、TXT 等
+                支持格式：PDF、Word、Excel、Markdown、HTML、TXT、CAJ 等
               </div>
             </template>
           </el-upload>
@@ -217,7 +217,7 @@ const DocumentConverter = {
 
   computed: {
     acceptedTypes() {
-      return '.pdf,.docx,.doc,.txt,.md,.html,.xlsx,.xls';
+      return '.pdf,.docx,.doc,.txt,.md,.html,.xlsx,.xls,.caj';
     },
 
     availableFormats() {
@@ -311,7 +311,8 @@ const DocumentConverter = {
         'md': ['pdf', 'docx', 'xlsx', 'text'],
         'html': ['markdown', 'text', 'pdf', 'docx'],
         'xlsx': ['markdown', 'text'],
-        'xls': ['markdown', 'text']
+        'xls': ['markdown', 'text'],
+        'caj': ['pdf', 'markdown', 'text', 'docx', 'xlsx']
       };
       
       return formatMap[fileExtension] || ['markdown', 'text', 'pdf'];
@@ -343,6 +344,7 @@ const DocumentConverter = {
       // 推荐格式逻辑
       if (fileExt === 'md' && targetFormat === 'pdf') return true;
       if (['pdf', 'docx'].includes(fileExt) && targetFormat === 'markdown') return true;
+      if (fileExt === 'caj' && targetFormat === 'pdf') return true;
       return false;
     },
 
