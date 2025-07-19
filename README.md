@@ -81,12 +81,7 @@
 - **安装依赖**:
 
   ```bash
-
-  ```
-- pip install -r requirements.txt
-
-  ```
-
+  pip install -r requirements.txt
   ```
 - **启动应用**:
 
@@ -106,8 +101,6 @@
   ```bash
   ngrok http 5000
   ```
-
-  `ngrok` 会生成一个公网URL，将这个URL发给您老婆，她就可以随时随地使用这个工具箱了！
 
 ---
 
