@@ -35,12 +35,14 @@ const DocumentConverter = {
             :on-change="handleFileChange"
             :before-remove="handleRemoveFile"
             :accept="acceptedTypes"
-            :limit="1"
+            :limit="10"
+            multiple
             v-model:file-list="fileList"
           >
             <el-icon class="el-icon--upload"><upload-filled /></el-icon>
             <div class="el-upload__text">
-              将文件拖到此处，或<em>点击上传</em>
+              将文件拖到此处，或<em>点击上传</em><br>
+              <small>支持批量上传，最多10个文件</small>
             </div>
             <template #tip>
               <div class="el-upload__tip">
@@ -51,40 +53,43 @@ const DocumentConverter = {
         </div>
 
         <!-- 转换设置 -->
-        <div v-if="selectedFile" class="conversion-settings">
-          <el-divider>转换设置</el-divider>
-          
+        <div v-if="fileList.length > 0" class="conversion-settings">
           <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="输入文件">
-                <el-input :value="selectedFile.name" readonly>
-                  <template #prepend>
-                    <el-icon><Document /></el-icon>
-                  </template>
-                </el-input>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
+            <el-col :span="24">
               <el-form-item label="目标格式">
-                <el-select 
-                  v-model="exportFormat" 
-                  placeholder="请选择导出格式"
+                <el-select
+                  v-model="exportFormat"
+                  placeholder="选择转换后的格式"
+                  size="large"
                   style="width: 100%"
                 >
-                  <el-option
-                    v-for="format in availableFormats"
-                    :key="format.value"
-                    :label="format.label"
-                    :value="format.value"
-                  >
-                    <div class="format-option">
-                      <el-icon>
-                        <component :is="format.icon" />
-                      </el-icon>
-                      <span>[[ format.label ]]</span>
-                      <el-tag v-if="format.recommended" size="small" type="success">推荐</el-tag>
-                    </div>
-                  </el-option>
+                  <el-option-group label="推荐格式">
+                    <el-option
+                      v-for="format in availableFormats.filter(f => f.recommended)"
+                      :key="format.value"
+                      :label="format.label"
+                      :value="format.value"
+                    >
+                      <div class="format-option">
+                        <el-icon><component :is="format.icon" /></el-icon>
+                        <span>[[ format.label ]]</span>
+                        <el-tag size="small" type="success">推荐</el-tag>
+                      </div>
+                    </el-option>
+                  </el-option-group>
+                  <el-option-group label="其他格式">
+                    <el-option
+                      v-for="format in availableFormats.filter(f => !f.recommended)"
+                      :key="format.value"
+                      :label="format.label"
+                      :value="format.value"
+                    >
+                      <div class="format-option">
+                        <el-icon><component :is="format.icon" /></el-icon>
+                        <span>[[ format.label ]]</span>
+                      </div>
+                    </el-option>
+                  </el-option-group>
                 </el-select>
               </el-form-item>
             </el-col>
@@ -103,17 +108,17 @@ const DocumentConverter = {
         </div>
 
         <!-- 转换按钮 -->
-        <div v-if="selectedFile" class="convert-actions">
+        <div v-if="fileList.length > 0" class="convert-actions">
           <el-button 
             type="primary" 
             size="large"
             :loading="converting"
             :disabled="!exportFormat"
-            @click="handleConvert"
+            @click="handleBatchConvert"
             class="convert-button"
           >
             <el-icon v-if="!converting"><Magic /></el-icon>
-            [[ converting ? '转换中...' : '开始转换' ]]
+            [[ converting ? '批量转换中...' : '开始转换 (' + fileList.length + '个文件)' ]]
           </el-button>
           
           <el-button 
@@ -126,17 +131,27 @@ const DocumentConverter = {
           </el-button>
         </div>
 
-        <!-- 转换进度 -->
+        <!-- 批量转换进度 -->
         <div v-if="converting" class="progress-section">
+          <div class="batch-progress-header">
+            <span class="progress-title">批量转换进度</span>
+            <span class="progress-count">[[ completedFiles ]] / [[ totalFiles ]] 个文件</span>
+          </div>
           <el-progress 
-            :percentage="progress" 
+            :percentage="overallProgress" 
             :stroke-width="8"
             :show-text="true"
             striped
             striped-flow
             class="progress-bar"
           />
-                     <p class="progress-text">[[ progressText ]]</p>
+          <p class="progress-text">[[ progressText ]]</p>
+          
+          <!-- 当前处理文件 -->
+          <div v-if="currentProcessingFile" class="current-file">
+            <el-icon><Document /></el-icon>
+            <span>正在处理：[[ currentProcessingFile ]]</span>
+          </div>
         </div>
       </el-card>
 
@@ -160,15 +175,15 @@ const DocumentConverter = {
           >
             <div class="history-item">
               <div class="history-main">
-                                 <strong>[[ item.fileName ]]</strong>
-                 <el-icon><Right /></el-icon>
-                 <strong>[[ item.targetFormat ]]</strong>
+                <strong>[[ item.fileName ]]</strong>
+                <el-icon><Right /></el-icon>
+                <strong>[[ item.targetFormat ]]</strong>
               </div>
               <div class="history-status">
-                                 <el-tag :type="item.success ? 'success' : 'danger'" size="small">
-                   [[ item.success ? '转换成功' : '转换失败' ]]
-                 </el-tag>
-                 <span v-if="item.error" class="error-text">[[ item.error ]]</span>
+                <el-tag :type="item.success ? 'success' : 'danger'" size="small">
+                  [[ item.success ? '转换成功' : '转换失败' ]]
+                </el-tag>
+                <span v-if="item.error" class="error-text">[[ item.error ]]</span>
               </div>
             </div>
           </el-timeline-item>
@@ -185,6 +200,11 @@ const DocumentConverter = {
       converting: false,
       progress: 0,
       progressText: '',
+      // 批量转换相关
+      overallProgress: 0,
+      completedFiles: 0,
+      totalFiles: 0,
+      currentProcessingFile: '',
       conversionHistory: [],
       serverStatus: {
         show: false,
@@ -201,9 +221,21 @@ const DocumentConverter = {
     },
 
     availableFormats() {
-      if (!this.selectedFile) return [];
+      if (this.fileList.length === 0) return [];
       
-      const fileExt = this.getFileExtension(this.selectedFile.name);
+      // 如果有多个文件，返回通用格式
+      if (this.fileList.length > 1) {
+        const formats = ['markdown', 'text', 'pdf', 'docx', 'xlsx'];
+        return formats.map(format => ({
+          value: format.toUpperCase(),
+          label: this.getFormatLabel(format),
+          icon: this.getFormatIcon(format),
+          recommended: false
+        }));
+      }
+      
+      // 单文件时保持原有逻辑
+      const fileExt = this.getFileExtension(this.fileList[0].name);
       const formats = this.getAvailableFormats(fileExt);
       
       return formats.map(format => ({
@@ -217,30 +249,30 @@ const DocumentConverter = {
     formatInfo() {
       if (!this.exportFormat) return null;
       
-      const info = {
+      const infos = {
         'MARKDOWN': {
           title: 'Markdown 格式',
-          description: '适合文档编辑和版本控制，支持表格、链接等丰富格式'
+          description: '通用文档标记语言，适合文档编写和版本控制'
+        },
+        'TEXT': {
+          title: '纯文本格式',
+          description: '去除所有格式，保留纯文本内容'
         },
         'PDF': {
-          title: 'PDF 格式', 
-          description: '便于分享和打印，保持格式不变'
+          title: 'PDF 格式',
+          description: '便携文档格式，适合打印和分享'
         },
         'DOCX': {
           title: 'Word 文档',
-          description: '适合进一步编辑和协作'
+          description: 'Microsoft Word 格式，支持丰富的文档编辑'
         },
         'XLSX': {
           title: 'Excel 表格',
-          description: '将表格数据导出为可编辑的电子表格'
-        },
-        'TEXT': {
-          title: '纯文本',
-          description: '去除所有格式，保留纯文本内容'
+          description: 'Microsoft Excel 格式，适合数据和表格处理'
         }
       };
       
-      return info[this.exportFormat] || null;
+      return infos[this.exportFormat] || null;
     }
   },
 
@@ -249,74 +281,40 @@ const DocumentConverter = {
   },
 
   methods: {
-    // 服务状态检查
-    async checkServerStatus() {
-      try {
-        const response = await fetch('/check_server');
-        const data = await response.json();
-        
-        if (data.status) {
-          this.serverStatus = {
-            show: true,
-            type: 'success',
-            title: '服务状态正常',
-            description: '所有转换功能可正常使用'
-          };
-        } else {
-          this.serverStatus = {
-            show: true,
-            type: 'error',
-            title: '服务连接失败',
-            description: '部分转换功能可能不可用，请稍后重试'
-          };
-        }
-      } catch (error) {
-        this.serverStatus = {
-          show: true,
-          type: 'error',
-          title: '服务检查失败',
-          description: '无法检查服务状态，请检查网络连接'
-        };
+    // 文件处理
+    handleFileChange(file, fileList) {
+      this.fileList = fileList;
+      if (fileList.length === 1) {
+        this.selectedFile = file.raw || file;
       }
     },
 
-    // 文件处理
-    handleFileChange(file) {
-      this.selectedFile = file.raw || file;
-      this.exportFormat = '';
-      console.log('File selected:', this.selectedFile);
+    handleRemoveFile(file, fileList) {
+      this.fileList = fileList;
+      if (fileList.length === 0) {
+        this.selectedFile = null;
+        this.exportFormat = '';
+      }
     },
 
-    handleRemoveFile() {
-      this.selectedFile = null;
-      this.exportFormat = '';
-      this.fileList = [];
-    },
-
-    handleReset() {
-      this.handleRemoveFile();
-      this.progress = 0;
-      this.progressText = '';
-    },
-
-    // 格式处理
+    // 工具函数
     getFileExtension(filename) {
       return filename.split('.').pop().toLowerCase();
     },
 
-    getAvailableFormats(fileExt) {
-      const formatMappings = {
+    getAvailableFormats(fileExtension) {
+      const formatMap = {
         'pdf': ['markdown', 'text'],
-        'docx': ['markdown', 'text'], 
-        'doc': ['markdown', 'text'],
-        'txt': ['markdown', 'text'],
-        'html': ['markdown', 'text'],
-        'md': ['markdown', 'text', 'pdf', 'docx', 'xlsx'],
+        'docx': ['markdown', 'text', 'pdf'],
+        'doc': ['markdown', 'text', 'pdf'],
+        'txt': ['markdown', 'pdf', 'docx'],
+        'md': ['pdf', 'docx', 'xlsx', 'text'],
+        'html': ['markdown', 'text', 'pdf', 'docx'],
         'xlsx': ['markdown', 'text'],
         'xls': ['markdown', 'text']
       };
       
-      return formatMappings[fileExt] || ['markdown', 'text'];
+      return formatMap[fileExtension] || ['markdown', 'text', 'pdf'];
     },
 
     getFormatLabel(format) {
@@ -348,141 +346,131 @@ const DocumentConverter = {
       return false;
     },
 
-    // 转换处理
-    async handleConvert() {
-      if (!this.selectedFile || !this.exportFormat) {
+    // 批量转换处理
+    async handleBatchConvert() {
+      if (this.fileList.length === 0 || !this.exportFormat) {
         this.$message.warning('请选择文件和目标格式');
         return;
       }
 
       this.converting = true;
-      this.progress = 0;
-      this.progressText = '准备上传文件...';
+      this.overallProgress = 0;
+      this.completedFiles = 0;
+      this.totalFiles = this.fileList.length;
+      this.progressText = '准备转换 ' + this.totalFiles + ' 个文件...';
+
+      const successFiles = [];
+      const failedFiles = [];
 
       try {
-        // 启动流畅的进度动画
-        this.startSmoothProgress();
-        
-        const formData = new FormData();
-        formData.append('file', this.selectedFile);
-        formData.append('export_format', this.exportFormat);
+        for (let i = 0; i < this.fileList.length; i++) {
+          const file = this.fileList[i];
+          this.currentProcessingFile = file.name;
+          this.progressText = '正在转换第 ' + (i + 1) + ' 个文件：' + file.name;
 
-        const response = await fetch('/convert', {
-          method: 'POST',
-          body: formData
-        });
+          try {
+            const formData = new FormData();
+            formData.append('file', file.raw || file);
+            formData.append('export_format', this.exportFormat);
 
-        // 转换完成，快速推进到90%
-        this.updateProgress(90, '转换完成，准备下载...');
+            const response = await fetch('/convert', {
+              method: 'POST',
+              body: formData
+            });
 
-        if (response.ok) {
-          const contentType = response.headers.get('content-type');
-          
-          if (contentType && !contentType.includes('application/json')) {
-            // 成功转换，下载文件
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            
-            // 构建下载文件名
-            const originalName = this.selectedFile.name.split('.').slice(0, -1).join('.');
-            let extension = this.exportFormat.toLowerCase();
-            if (extension === 'markdown') extension = 'md';
-            const downloadName = `${originalName}.${extension}`;
-            
-            // 创建下载链接
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = downloadName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
+            if (response.ok) {
+              const contentType = response.headers.get('content-type');
+              
+              if (contentType && !contentType.includes('application/json')) {
+                // 成功转换，下载文件
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                
+                // 构建下载文件名
+                const originalName = file.name.split('.').slice(0, -1).join('.');
+                let extension = this.exportFormat.toLowerCase();
+                if (extension === 'markdown') extension = 'md';
+                const downloadName = originalName + '.' + extension;
+                
+                // 创建下载链接
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = downloadName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
 
-            this.updateProgress(100, '下载完成！');
-            
-            // 添加到历史记录
-            this.addToHistory(this.selectedFile.name, this.exportFormat, true);
-            
-            this.$message.success('转换成功！');
-            
-            // 3秒后重置
-            setTimeout(() => {
-              this.handleReset();
-              this.converting = false;
-            }, 2000);
-            
-          } else {
-            // 服务器返回错误
-            const errorData = await response.json();
-            throw new Error(errorData.error || '转换失败');
+                successFiles.push(file.name);
+                this.addToHistory(file.name, this.exportFormat, true);
+                
+              } else {
+                // 服务器返回错误
+                const errorData = await response.json();
+                throw new Error(errorData.error || '转换失败');
+              }
+            } else {
+              throw new Error('服务器错误：' + response.status);
+            }
+
+          } catch (error) {
+            console.error('转换失败:', error);
+            failedFiles.push({name: file.name, error: error.message});
+            this.addToHistory(file.name, this.exportFormat, false, error.message);
           }
-        } else {
-          throw new Error(`服务器错误：${response.status}`);
+
+          // 更新整体进度
+          this.completedFiles = i + 1;
+          this.overallProgress = Math.round((this.completedFiles / this.totalFiles) * 100);
         }
 
+        // 转换完成
+        this.currentProcessingFile = '';
+        if (failedFiles.length === 0) {
+          this.progressText = '全部转换完成！共 ' + successFiles.length + ' 个文件';
+          this.$message.success('批量转换完成！');
+        } else if (successFiles.length === 0) {
+          this.progressText = '转换失败，请检查文件格式';
+          this.$message.error('批量转换失败！');
+        } else {
+          this.progressText = '部分转换完成：成功 ' + successFiles.length + ' 个，失败 ' + failedFiles.length + ' 个';
+          this.$message.warning('部分文件转换失败，请检查文件格式');
+        }
+        
+        // 3秒后重置
+        setTimeout(() => {
+          this.handleReset();
+          this.converting = false;
+        }, 3000);
+
       } catch (error) {
-        console.error('转换失败:', error);
-        this.addToHistory(this.selectedFile.name, this.exportFormat, false, error.message);
-        this.$message.error(`转换失败: ${error.message}`);
+        console.error('批量转换失败:', error);
+        this.$message.error('批量转换失败: ' + error.message);
         this.converting = false;
-        this.progress = 0;
+        this.overallProgress = 0;
         this.progressText = '';
       }
     },
 
-    updateProgress(percentage, text) {
-      this.progress = percentage;
-      this.progressText = text;
+    // 重置
+    handleReset() {
+      this.fileList = [];
+      this.selectedFile = null;
+      this.exportFormat = '';
+      this.converting = false;
+      this.overallProgress = 0;
+      this.completedFiles = 0;
+      this.totalFiles = 0;
+      this.currentProcessingFile = '';
+      this.progressText = '';
+      this.$refs.uploadRef?.clearFiles();
     },
 
-    // 启动流畅的进度动画
-    startSmoothProgress() {
-      let currentProgress = 0;
-      const stages = [
-        { progress: 15, text: '正在上传文件...', duration: 800 },
-        { progress: 35, text: '文件上传完成', duration: 500 },
-        { progress: 50, text: '服务器分析中...', duration: 1000 },
-        { progress: 75, text: '正在转换格式...', duration: 1500 },
-        { progress: 85, text: '转换处理中...', duration: 2000 }
-      ];
-
-      let stageIndex = 0;
-      
-      const animateProgress = () => {
-        if (stageIndex >= stages.length || !this.converting) {
-          return;
-        }
-        
-        const stage = stages[stageIndex];
-        const increment = (stage.progress - currentProgress) / 20; // 分20步完成
-        
-        const stepAnimation = () => {
-          if (currentProgress < stage.progress && this.converting) {
-            currentProgress += increment;
-            this.progress = Math.min(currentProgress, stage.progress);
-            this.progressText = stage.text;
-            
-            setTimeout(stepAnimation, stage.duration / 20);
-          } else {
-            // 当前阶段完成，进入下一阶段
-            stageIndex++;
-            currentProgress = stage.progress;
-            setTimeout(animateProgress, 200); // 短暂停顿后进入下一阶段
-          }
-        };
-        
-        stepAnimation();
-      };
-      
-      // 立即开始第一阶段
-      this.updateProgress(5, '准备上传文件...');
-      setTimeout(animateProgress, 300);
-    },
-
+    // 历史记录
     addToHistory(fileName, targetFormat, success, error = null) {
       const historyItem = {
         fileName,
-        targetFormat,
+        targetFormat: this.getFormatLabel(targetFormat.toLowerCase()),
         success,
         error,
         timestamp: new Date().toLocaleString()
@@ -490,9 +478,40 @@ const DocumentConverter = {
       
       this.conversionHistory.unshift(historyItem);
       
-      // 保持最新的5条记录
-      if (this.conversionHistory.length > 5) {
-        this.conversionHistory = this.conversionHistory.slice(0, 5);
+      // 只保留最近10条记录
+      if (this.conversionHistory.length > 10) {
+        this.conversionHistory = this.conversionHistory.slice(0, 10);
+      }
+    },
+
+    // 服务器状态检查
+    async checkServerStatus() {
+      try {
+        const response = await fetch('/check_server');
+        const data = await response.json();
+
+        if (data.status) {
+          this.serverStatus = {
+            show: true,
+            type: 'success',
+            title: '服务状态正常',
+            description: '所有转换功能可正常使用'
+          };
+        } else {
+          this.serverStatus = {
+            show: true,
+            type: 'error',
+            title: '服务连接失败',
+            description: '部分转换功能可能不可用，请稍后重试'
+          };
+        }
+      } catch (error) {
+        this.serverStatus = {
+          show: true,
+          type: 'error',
+          title: '服务检查失败',
+          description: '无法检查服务状态，请检查网络连接'
+        };
       }
     }
   }

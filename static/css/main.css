@@ -914,6 +914,41 @@ body {
   margin-bottom: 20px;
 }
 
+/* 批量转换进度样式 */
+.batch-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.progress-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.progress-count {
+  font-size: 14px;
+  color: var(--text-secondary);
+  background: var(--background-light);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.current-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: var(--background-light);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
 .convert-button, .reset-button {
   border-radius: 25px;
   padding: 12px 30px;
