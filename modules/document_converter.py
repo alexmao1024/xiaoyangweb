@@ -354,67 +354,6 @@ class DocumentConverter:
                 logger.error(f"pypandoc转换失败: {e}")
                 raise Exception(f"DOCX转PDF失败: {e}")
     
-    def _convert_docx_to_pdf_with_word(self, input_path: str, output_path: str) -> None:
-        """使用微软Word直接转换DOCX为PDF（最佳效果）"""
-        try:
-            logger.info(f"docx2pdf 微软Word转换: {input_path} -> {output_path}")
-            
-            # 使用微软Word进行转换，保持原始格式和样式
-            # 禁用进度条以避免干扰日志输出
-            import sys
-            import os
-            from io import StringIO
-            
-            # 临时重定向stdout来隐藏进度条
-            old_stdout = sys.stdout
-            sys.stdout = StringIO()
-            
-            try:
-                docx2pdf_convert(input_path, output_path)
-            finally:
-                # 恢复stdout
-                sys.stdout = old_stdout
-            
-            # 验证文件是否真的生成了
-            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-                logger.info("✅ docx2pdf 微软Word转换成功，文件已生成")
-            else:
-                logger.warning("⚠️ docx2pdf 声称成功但未生成文件，可能是文件名问题")
-                raise Exception("转换完成但未找到输出文件，可能是文件名过长或包含特殊字符")
-            
-        except Exception as e:
-            error_msg = str(e).lower()
-            
-            # 友好的错误提示
-            if "word" in error_msg or "com" in error_msg:
-                logger.warning(f"微软Word转换失败: {e}")
-                logger.info("📋 提示：可能需要安装Microsoft Word或检查Word版本")
-                logger.info("🔄 自动回退到pypandoc方案...")
-                
-                # 回退到pypandoc
-                try:
-                    self._convert_docx_to_pdf_direct(input_path, output_path)
-                    logger.info("✅ 回退到pypandoc转换成功")
-                except Exception as fallback_e:
-                    logger.error(f"❌ pypandoc回退也失败: {fallback_e}")
-                    # 最后回退到Docling
-                    try:
-                        self._convert_with_docling(input_path, output_path, "PDF")
-                        logger.info("✅ 最终回退到Docling转换成功（可能格式略有差异）")
-                    except Exception as final_e:
-                        raise Exception(f"DOCX转PDF完全失败: Word错误={e}, pypandoc错误={fallback_e}, Docling错误={final_e}")
-            else:
-                logger.error(f"docx2pdf转换失败: {e}")
-                logger.info("🔄 自动回退到pypandoc方案...")
-                
-                # 回退到pypandoc
-                try:
-                    self._convert_docx_to_pdf_direct(input_path, output_path)
-                    logger.info("✅ 回退转换成功")
-                except Exception as fallback_e:
-                    logger.error(f"❌ 回退转换也失败: {fallback_e}")
-                    raise Exception(f"DOCX转PDF失败: docx2pdf错误={e}, 回退错误={fallback_e}")
-    
     def _convert_docx_to_pdf_direct(self, input_path: str, output_path: str) -> None:
         """直接DOCX转PDF（保持格式）"""
         try:
